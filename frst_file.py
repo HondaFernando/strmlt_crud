@@ -3,4 +3,6 @@ import pandas as pd
 import psycopg2
 import modules
 
-cursor = modules.connect()
+cursor, connection = modules.connect()
+
+get_full_table(connection)

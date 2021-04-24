@@ -4,4 +4,7 @@ def connect():
                               host = 'localhost')
     cursor = connection.cursor()
     
-    return cursor
+    return cursor, connection
+
+def get_full_table(connection):
+    return pd.read_sql('SELECT * FROM people;', connection)
