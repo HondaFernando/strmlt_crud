@@ -1,3 +1,6 @@
+import psycopg2
+import pandas as pd
+
 def connect():
     
     connection = psycopg2.connect(database = 'strmlt_crud_db', user = 'postgres', password = '5432',
