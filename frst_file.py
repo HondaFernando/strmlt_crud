@@ -1,6 +1,9 @@
-# import streamlit as st
+import streamlit as st
 import modules
 
 cursor, connection = modules.connect()
 
-print(modules.get_full_table(connection))
+st.title('pagina')
+
+df = modules.get_full_table(connection)
+df
