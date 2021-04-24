@@ -1,43 +1,42 @@
 import streamlit as st
 import modules
 
+# should cache data
+
 cursor, connection = modules.connect()
 
-st.title('pagina')
+st.title('CRUD SQL')
 task = st.sidebar.selectbox('task', ['create', 'read', 'update', 'delete'])
 
 if task == 'read':
     
-    series_filter = st.sidebar.multiselect('filter', ['id', 'nome', 'nascimento', 'classe', 'score'])
-    df = modules.get_full_table(connection)
+    quant_constraint = st.sidebar.selectbox('filter', ['series', 'ano', 'score', 'classe'], index = 0)
 
-    df[series_filter]
+    if quant_constraint == 'series':
+        ret = modules.read_no_constraint(connection)
+        ret
+
+    elif quant_constraint == 'ano':
+
+        ret = modules.read_year_constraint(connection)        
+        ret 
+
+    elif quant_constraint == 'score':
+        ret = modules.read_score_constraint(connection)
+        ret
+    
+    elif quant_constraint == 'classe':
+        ret = modules.read_class_constraint(connection)
+        ret
 
 elif task == 'create':
     
-    main_wndw = ''
-    ret = modules.create_row(cursor, connection)
-    if ret == None:
-        main_wndw
-
-    else:
-        ret
-
+     modules.create_row(cursor, connection)
+    
 elif task == 'delete':
 
-    main_wndw = ''
-    ret = modules.delete_row(cursor, connection)
-    if ret == None:
-        main_wndw
-    else:
-        ret
+    modules.delete_row(cursor, connection)
 
 elif task == 'update':
-
-    main_wndw = ''    
-    ret = modules.update_row(cursor, connection)
-    if ret == None:
-        main_wndw
-    else:
-        ret
- 
+   
+    modules.update_row(cursor, connection)

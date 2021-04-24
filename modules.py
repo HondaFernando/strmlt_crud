@@ -2,6 +2,7 @@ import psycopg2
 import pandas as pd
 import streamlit as st
 
+# ----------> CONNECT
 def connect():
     
     connection = psycopg2.connect(database = 'strmlt_crud_db', user = 'postgres', password = '5432',
@@ -10,9 +11,58 @@ def connect():
     
     return cursor, connection
 
-def get_full_table(connection):
-    return pd.read_sql('SELECT * FROM people;', connection)
+# ----------> READ
+def read_no_constraint(connection):
 
+    series_filter = st.sidebar.multiselect('series', ['id', 'nome', 'nascimento', 'classe', 'score'], ['id', 'nome', 'nascimento', 'classe', 'score'])
+    df = pd.read_sql('SELECT * FROM people;', connection)
+
+    if df[series_filter].shape[1] == 0:
+        return st.warning('no data')
+    else:
+        return df[series_filter]
+
+def read_year_constraint(connection):
+    
+    # hard coded range
+    year_range = st.sidebar.slider('year range', min_value = 1920, max_value = 2020, value = (2000, 2010))
+    df = pd.read_sql('SELECT * FROM people', connection)
+
+    df['aux'] = df['nascimento'].str.split('/')
+    df['aux'] = df['aux'].apply(lambda x: x[2])
+    df['aux'] = df['aux'].astype(int)
+
+    df = df.loc[(df['aux'] >= year_range[0]) & (df['aux'] <= year_range[1])]
+    df.drop('aux', axis = 1, inplace = True)
+
+    return df
+
+def read_score_constraint(connection):
+
+    # hard coded range
+    score_range = st.sidebar.slider('score range', min_value = 0, max_value = 100, value = (50, 75))
+    df = pd.read_sql(f'SELECT * FROM people WHERE score >= {score_range[0]} and score <= {score_range[1]}', connection)
+
+    return df
+
+def read_class_constraint(connection):
+
+    classe = st.sidebar.multiselect('classe', ['a', 'b', 'c', 'd', 'e'])
+
+    if len(classe) == 1:
+        df = pd.read_sql(f"SELECT * FROM people WHERE classe = '{classe[0]}'", connection)
+        
+        return df
+
+    elif len(classe) > 1:
+        df = pd.read_sql(f"SELECT * FROM people WHERE classe IN {tuple(classe)}", connection)
+
+        return df
+
+    else:
+        return 'no data'
+
+# ----------> CREATE
 def create_row(cursor, connection):
 
     id_input = st.text_input('id')
@@ -31,13 +81,12 @@ def create_row(cursor, connection):
             cursor.execute(string)
             connection.commit()
 
-            return 'criado'
+            st.success('feito')
 
         else:
-            string = 'campos nao preenchidos'
+            st.warning('algo deu errado')
 
-            return string
-
+# ----------> DELETE
 def delete_row(cursor, connection):
     
     id_del_input = st.text_input('id para deletar')
@@ -49,11 +98,12 @@ def delete_row(cursor, connection):
             string = f"DELETE FROM people WHERE id = {id_del_input}"
             cursor.execute(string)
             connection.commit()
-            return 'deletado'
+            st.success('feito')
 
         else:
-            return 'nao tem id'
+            st.warning('nao tem id')
 
+# ----------> UPDATE
 def update_row(cursor, connection):
 
     df = pd.read_sql("SELECT id FROM people", connection)
@@ -72,12 +122,13 @@ def update_row(cursor, connection):
                 string = f"UPDATE people SET {feature} = '{text_update}' WHERE id = {target_id}"
                 cursor.execute(string)
                 connection.commit()
-                return 'atualizado'
+                st.success('feito')
 
             else:
                 string = f"UPDATE people SET {feature} = {text_update} WHERE id = {target_id}"
                 cursor.execute(string)
                 connection.commit()
-                return 'atualizado'
+                st.success('feito')
 
-  
+        else:
+            st.warning('algo deu errado')
